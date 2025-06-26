@@ -202,12 +202,16 @@ end
 -- Parsing and running --
 -------------------------
 
-local function safe_print(param)
+local function safe_print(name, param)
 	if mesecon.setting("luacontroller_print_behavior", "log") == "log" then
 		local string_meta = getmetatable("")
 		local sandbox = string_meta.__index
 		string_meta.__index = string -- Leave string sandbox temporarily
-		minetest.log("action", string.format("[mesecons_luacontroller] print(%s)", dump(param)))
+		if name then
+			minetest.chat_send_player(name, string.format("[mesecons_luacontroller] print(%s)", dump(param)))
+		else
+			minetest.log("action", string.format("[mesecons_luacontroller] print(%s)", dump(param)))
+		end
 		string_meta.__index = sandbox -- Restore string sandbox
 	end
 end
@@ -506,7 +510,14 @@ local function create_environment(pos, mem, event, itbl, send_warning)
 		mem = mem,
 		heat = mesecon.get_heat(pos),
 		heat_max = mesecon.setting("overheat_max", 20),
-		print = safe_print,
+		print = function(param)
+			local meta = minetest.get_meta(pos)
+			local name
+			if meta:contains("owner") then
+				name = meta:get_string("owner")
+			end
+			safe_print(name, param)
+		end,
 		interrupt = get_interrupt(pos, itbl, send_warning),
 		digiline_send = get_digiline_send(pos, itbl, send_warning),
 		string = {
@@ -892,6 +903,11 @@ for d = 0, 1 do
 		sounds = mesecon.node_sound.stone,
 		mesecons = mesecons,
 		digiline = digiline,
+		after_place_node = function(pos, placer, itemstack, pointed_thing)
+			if placer and placer:is_player() then
+				minetest.get_meta(pos):set_string("owner", placer:get_player_name())
+			end
+		end,
 		-- Virtual portstates are the ports that
 		-- the node shows as powered up (light up).
 		virtual_portstates = {
