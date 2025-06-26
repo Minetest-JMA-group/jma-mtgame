@@ -203,17 +203,16 @@ end
 -------------------------
 
 local function safe_print(name, param)
+	local string_meta = getmetatable("")
+	local sandbox = string_meta.__index
+	string_meta.__index = string -- Leave string sandbox temporarily
 	if mesecon.setting("luacontroller_print_behavior", "log") == "log" then
-		local string_meta = getmetatable("")
-		local sandbox = string_meta.__index
-		string_meta.__index = string -- Leave string sandbox temporarily
-		if name then
-			minetest.chat_send_player(name, string.format("[mesecons_luacontroller] print(%s)", dump(param)))
-		else
-			minetest.log("action", string.format("[mesecons_luacontroller] print(%s)", dump(param)))
-		end
-		string_meta.__index = sandbox -- Restore string sandbox
+		minetest.log("action", string.format("[mesecons_luacontroller] print(%s)", dump(param)))
 	end
+	if name then
+		minetest.chat_send_player(name, string.format("[mesecons_luacontroller] print(%s)", dump(param)))
+	end
+	string_meta.__index = sandbox -- Restore string sandbox
 end
 
 local function safe_date()

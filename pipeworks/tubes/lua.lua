@@ -228,14 +228,17 @@ end
 -- Parsing and running --
 -------------------------
 
-local function safe_print(param)
+local function safe_print(name, param)
+	local string_meta = getmetatable("")
+	local sandbox = string_meta.__index
+	string_meta.__index = string -- Leave string sandbox temporarily
 	if (minetest.settings:get("pipeworks_lua_tube_print_behavior") or "log") == "log" then
-		local string_meta = getmetatable("")
-		local sandbox = string_meta.__index
-		string_meta.__index = string -- Leave string sandbox temporarily
 		minetest.log("action", string.format("[pipeworks.tubes.lua] print(%s)", dump(param)))
-		string_meta.__index = sandbox -- Restore string sandbox
 	end
+	if name then
+		minetest.chat_send_player(name, string.format("[pipeworks.tubes.lua] print(%s)", dump(param)))
+	end
+	string_meta.__index = sandbox -- Restore string sandbox
 end
 
 local function safe_date()
@@ -488,7 +491,14 @@ local function create_environment(pos, mem, event, itbl, send_warning)
 		mem = mem,
 		heat = mesecon.get_heat(pos),
 		heat_max = mesecon.setting("overheat_max", 20),
-		print = safe_print,
+		print = function(param)
+			local meta = minetest.get_meta(pos)
+			local name
+			if meta:contains("owner") then
+				name = meta:get_string("owner")
+			end
+			safe_print(name, param)
+		end,
 		interrupt = get_interrupt(pos, itbl, send_warning),
 		digiline_send = get_digiline_send(pos, itbl, send_warning),
 		string = {
@@ -994,7 +1004,12 @@ for white  = 0, 1 do
 				return go_back(velocity)
 			end,
 		},
-		after_place_node = pipeworks.after_place,
+		after_place_node = function(pos, placer, itemstack, pointed_thing)
+			if placer and placer:is_player() then
+				minetest.get_meta(pos):set_string("owner", placer:get_player_name())
+			end
+			return pipeworks.after_place(pos, placer, itemstack, pointed_thing)
+		end,
 		on_blast = function(pos, intensity)
 			if not intensity or intensity > 1 + 3^0.5 then
 				minetest.remove_node(pos)
