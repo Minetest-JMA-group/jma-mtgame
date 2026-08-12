@@ -330,13 +330,11 @@ function mesecon.file2table(filename)
 	local t = f:read("*all")
 	f:close()
 	if t == "" or t == nil then return {} end
-	return minetest.deserialize(t)
+	return minetest.deserialize(t) or {}
 end
 
 function mesecon.table2file(filename, table)
-	local f = io.open(wpath.."/"..filename, "w")
-	f:write(minetest.serialize(table))
-	f:close()
+	core.safe_file_write(wpath.."/"..filename, minetest.serialize(table))
 end
 
 -- Block position "hashing" (convert to integer) functions for voxelmanip cache

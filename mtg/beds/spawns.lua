@@ -23,6 +23,9 @@ function beds.read_spawns()
 			local y = input:read("*n")
 			local z = input:read("*n")
 			local name = input:read("*l")
+			if not y or not z or not name then
+				break
+			end
 			spawns[name:sub(2)] = {x = x, y = y, z = z}
 		until input:read(0) == nil
 		io.close(input)
@@ -42,12 +45,10 @@ function beds.save_spawns()
 		return
 	end
 	local data = {}
-	local output = io.open(org_file, "w")
 	for k, v in pairs(beds.spawn) do
 		table.insert(data, string.format("%.1f %.1f %.1f %s\n", v.x, v.y, v.z, k))
 	end
-	output:write(table.concat(data))
-	io.close(output)
+	core.safe_file_write(org_file, table.concat(data))
 end
 
 function beds.set_spawns()

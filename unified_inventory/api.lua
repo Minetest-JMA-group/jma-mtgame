@@ -234,6 +234,7 @@ local function load_home()
 		local y = input:read("*n")
 		local z = input:read("*n")
 		local name = input:read("*l")
+		if not y or not z or not name then break end
 		ui.home_pos[name:sub(2)] = {x = x, y = y, z = z}
 	end
 	io.close(input)
@@ -246,16 +247,14 @@ function ui.set_home(player, pos)
 	ui.home_pos[player_name] = vector.round(pos)
 
 	-- save the home data from the table to the file
-	local output = io.open(ui.home_filename, "w")
-	if not output then
+	local output = {}
+	for k, v in pairs(ui.home_pos) do
+		table.insert(output, v.x.." "..v.y.." "..v.z.." "..k.."\n")
+	end
+	if not core.safe_file_write(ui.home_filename, table.concat(output)) then
 		minetest.log("warning", "[unified_inventory] Failed to save file: "
 			.. ui.home_filename)
-		return
 	end
-	for k, v in pairs(ui.home_pos) do
-		output:write(v.x.." "..v.y.." "..v.z.." "..k.."\n")
-	end
-	io.close(output)
 end
 
 function ui.go_home(player)

@@ -16,9 +16,7 @@ local function read_file()
 end
 
 local function write_file(tbl)
-	local f = io.open(filename, "w")
-	f:write(minetest.serialize(tbl))
-	f:close()
+	core.safe_file_write(filename, minetest.serialize(tbl))
 end
 
 local function read_entities()

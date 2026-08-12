@@ -37,17 +37,12 @@ sethome.set = function(name, pos)
 		return true
 	end
 	local data = {}
-	local output = io.open(homes_file, "w")
-	if output then
-		homepos[name] = nil
-		for i, v in pairs(homepos) do
-			table.insert(data, string.format("%.1f %.1f %.1f %s\n", v.x, v.y, v.z, i))
-		end
-		output:write(table.concat(data))
-		io.close(output)
-		return true
+	homepos[name] = nil
+	for i, v in pairs(homepos) do
+		table.insert(data, string.format("%.1f %.1f %.1f %s\n", v.x, v.y, v.z, i))
 	end
-	return true -- if the file doesn't exist - don't return an error.
+	core.safe_file_write(homes_file, table.concat(data))
+	return true
 end
 
 sethome.get = function(name)
