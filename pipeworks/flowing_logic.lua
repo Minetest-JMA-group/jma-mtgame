@@ -166,6 +166,7 @@ pipeworks.fountainhead_check = function(pos, node)
 				minetest.add_node(pos,{name = "pipeworks:fountainhead_pouring"})
 				if finitewater or not is_source(abovename) then
 					local liquid_name = minetest.get_meta(near_node_pos):get_string("liquid_name")
+                    if liquid_name == "" then return end
 					minetest.add_node({x=pos.x,y=pos.y+1,z=pos.z},{name = liquid_name})
 					minetest.get_meta(pos):set_string("liquid_name", liquid_name)
 				end
